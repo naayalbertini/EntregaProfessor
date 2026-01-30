@@ -11,7 +11,6 @@
 
   <style>
     :root{
-      /* Tema CLARO */
       --bg: #f6f8ff;
       --card: #ffffff;
       --text: #0f172a;
@@ -27,13 +26,12 @@
 
       --shadow: 0 10px 30px rgba(15,23,42,.08);
       --radius: 16px;
-      --radius2: 12px;
     }
 
     *{ box-sizing:border-box; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       background:
         radial-gradient(1000px 500px at 15% 0%, rgba(37,99,235,.10), transparent 55%),
         radial-gradient(900px 500px at 90% 10%, rgba(14,165,233,.10), transparent 60%),
@@ -41,31 +39,36 @@
       color: var(--text);
     }
 
-    .wrap{ max-width: 1200px; margin: 24px auto; padding: 0 16px 32px; }
+    .wrap{ max-width: 1200px; margin: 18px auto; padding: 0 14px 28px; }
 
     header{
-      display:flex;
-      gap: 14px;
-      align-items:flex-start;
-      justify-content:space-between;
-      margin-bottom: 16px;
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
     }
-    h1{ margin:0; font-size: 22px; letter-spacing:.2px; }
+    h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
     .sub{ margin:6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+
+    .topline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .badge{
-      font-size: 12px;
-      color: var(--muted);
+      font-size: 12px; color: var(--muted);
       border: 1px solid var(--line);
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.8);
+      padding: 6px 10px; border-radius: 999px;
+      background: rgba(255,255,255,.85);
       white-space: nowrap;
     }
+    .status{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border: 1px solid var(--line); background:#fff; color: var(--muted);
+      white-space: nowrap;
+    }
+    .status.ok{ border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.06); color: #0f5132; }
+    .status.bad{ border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.06); color: #7f1d1d; }
 
     .grid{
       display:grid;
-      grid-template-columns: 390px 1fr;
-      gap: 16px;
+      grid-template-columns: 420px 1fr;
+      gap: 14px;
+      align-items:start;
     }
     @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
 
@@ -76,38 +79,28 @@
       box-shadow: var(--shadow);
       overflow:hidden;
     }
-
     .cardHeader{
-      padding: 14px 16px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
+      display:flex; align-items:center; justify-content:space-between; gap: 10px;
       background: linear-gradient(180deg, rgba(37,99,235,.06), transparent);
+      flex-wrap: wrap;
     }
-    .cardHeader .h{ font-weight: 800; font-size: 14px; letter-spacing:.2px; }
+    .cardHeader .h{ font-weight: 800; font-size: 13px; letter-spacing:.2px; }
+    .cardBody{ padding: 14px; }
 
-    .cardBody{ padding: 16px; }
+    label{ display:block; font-size: 12px; color: var(--muted); margin: 0 0 6px; }
 
-    label{
-      display:block;
-      font-size: 12px;
-      color: var(--muted);
-      margin: 0 0 6px;
-    }
-
-    .row{ display:grid; gap: 12px; margin-bottom: 12px; }
+    .row{ display:grid; gap: 10px; margin-bottom: 10px; }
     .row.two{ grid-template-columns: 1fr 1fr; }
     @media (max-width: 520px){ .row.two{ grid-template-columns: 1fr; } }
 
     input, select{
       width:100%;
-      padding: 12px 12px;
+      padding: 11px 12px;
       border-radius: 12px;
       border: 1px solid var(--line);
-      background: #ffffff;
-      color: var(--text);
+      background: #fff; color: var(--text);
       outline: none;
     }
     input::placeholder{ color: rgba(71,85,105,.75); }
@@ -115,100 +108,56 @@
     .hint{ font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.35; }
 
     .checkline{
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 12px;
+      display:flex; align-items:center; gap: 10px;
+      padding: 10px 12px; border-radius: 12px;
       border: 1px dashed rgba(37,99,235,.35);
       background: rgba(37,99,235,.05);
-      margin-top: 6px;
+      margin-top: 4px;
     }
-    .checkline input[type="checkbox"]{
-      width: 18px; height: 18px; margin:0;
-      accent-color: var(--ok);
-    }
-    .checkline .txt{ font-size: 13px; color: var(--text); }
+    .checkline input{ width:18px; height:18px; margin:0; accent-color: var(--ok); }
 
-    .actions{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
+    .actions{ display:flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 
     button{
-      border: 0;
-      border-radius: 12px;
-      padding: 11px 14px;
-      cursor:pointer;
-      color: white;
-      font-weight: 800;
-      letter-spacing:.2px;
-      display:inline-flex;
-      align-items:center;
-      gap: 10px;
-      transition: transform .05s ease, filter .15s ease, background .15s ease;
-      user-select:none;
+      border:0; border-radius: 12px; padding: 10px 12px;
+      cursor:pointer; font-weight: 800;
+      display:inline-flex; align-items:center; gap: 8px;
+      white-space: nowrap;
     }
-    button:active{ transform: translateY(1px); }
-
-    button.primary{ background: linear-gradient(180deg, var(--primary), var(--primary2)); }
+    button.primary{ color:#fff; background: linear-gradient(180deg, var(--primary), var(--primary2)); }
     button.primary:disabled{ opacity:.55; cursor:not-allowed; }
-
-    button.secondary{
-      background: #0f172a;
-      color: #fff;
-      opacity:.9;
-    }
-    button.secondary:hover{ filter: brightness(1.05); }
-
-    button.danger{ background: var(--danger); }
-    button.danger:hover{ filter: brightness(1.05); }
+    button.secondary{ background:#0f172a; color:#fff; opacity:.92; }
+    button.danger{ background: var(--danger); color:#fff; }
 
     .toolbar{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items:center;
-      justify-content:space-between;
-      padding: 12px 16px;
+      display:flex; gap: 10px; flex-wrap: wrap;
+      align-items:center; justify-content:space-between;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.85);
     }
     .mini{ display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
     .chip{
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      color: var(--muted);
-      background: rgba(255,255,255,.9);
+      font-size: 12px; padding: 6px 10px; border-radius: 999px;
+      border: 1px solid var(--line); color: var(--muted);
+      background: rgba(255,255,255,.95);
+      white-space: nowrap;
     }
 
-    table{ width: 100%; border-collapse: collapse; font-size: 13px; }
+    table{ width:100%; border-collapse: collapse; font-size: 13px; }
     th, td{ padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
     th{
-      text-align:left;
-      color: rgba(15,23,42,.7);
-      font-size: 12px;
-      letter-spacing:.25px;
-      text-transform: uppercase;
-      background: rgba(37,99,235,.04);
+      text-align:left; color: rgba(15,23,42,.7); font-size: 12px;
+      letter-spacing:.25px; text-transform: uppercase; background: rgba(37,99,235,.04);
     }
-    td{ color: rgba(15,23,42,.92); }
-    .empty{ padding: 18px 16px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .empty{ padding: 16px 14px; color: var(--muted); font-size: 13px; line-height: 1.45; }
 
     .pill{
-      display:inline-flex;
-      align-items:center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: 999px;
+      display:inline-flex; align-items:center; gap: 6px;
+      padding: 6px 10px; border-radius: 999px;
       border: 1px solid var(--line);
       background: rgba(37,99,235,.04);
-      font-size: 12px;
-      color: rgba(15,23,42,.9);
+      font-size: 12px; color: rgba(15,23,42,.9);
       white-space: nowrap;
     }
     .dot{
@@ -218,29 +167,48 @@
     }
     .nowrap{ white-space: nowrap; }
 
-    .footerNote{
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
+    /* ASSINATURA */
+    .sigWrap{
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow:hidden;
+      background: #fff;
     }
-
-    .topline{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
+    .sigTop{
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 10px; padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(37,99,235,.04);
+      flex-wrap: wrap;
     }
-    .status{
-      font-size:12px;
-      color: var(--muted);
-      padding:6px 10px;
-      border:1px solid var(--line);
-      border-radius:999px;
+    .sigTop .left{ display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
+    .tag{
+      font-size: 12px; padding: 6px 10px; border-radius: 999px;
+      border: 1px solid var(--line);
+      background:#fff; color: var(--muted);
+      white-space: nowrap;
+    }
+    .sigCanvasHost{ padding: 10px; }
+    canvas{
+      width:100%;
+      height: 170px;
+      display:block;
       background:#fff;
+      border-radius: 12px;
+      border: 1px dashed rgba(37,99,235,.35);
+      touch-action: none;
     }
-    .status.ok{ border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.06); color: #0f5132; }
-    .status.bad{ border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.06); color: #7f1d1d; }
+    @media (max-width: 520px){ canvas{ height: 150px; } }
+
+    .sigPreview{
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow:hidden;
+      background:#fff;
+      display:none;
+    }
+    .sigPreview img{ width:100%; display:block; max-height: 150px; object-fit: contain; }
   </style>
 </head>
 
@@ -251,7 +219,7 @@
         <h1>Entrega de Livros do Professor</h1>
         <p class="sub">
           Turmas do <b>Fundamental I</b>, <b>Fundamental II</b> e <b>Ensino Médio</b>.
-          Preencha professor + livro, marque o check e confirme. Tudo salva no <b>Firebase Firestore</b>.
+          Preencha professor + livro, faça a <b>assinatura</b>, marque o check e confirme.
         </p>
       </div>
       <div class="topline">
@@ -291,7 +259,32 @@
             <div>
               <label for="livro">Livro entregue</label>
               <input id="livro" type="text" placeholder="Ex.: Matemática – Livro do Professor (Vol. 1)" />
-              <div class="hint">Você pode incluir volume/edição. Ex.: “Coleção X – 2026 – Vol. 2”.</div>
+              <div class="hint">Pode incluir coleção/edição. Ex.: “Coleção X – 2026 – Vol. 2”.</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Assinatura do professor</label>
+              <div class="sigWrap">
+                <div class="sigTop">
+                  <div class="left">
+                    <span class="tag" id="sigTag">Não assinou</span>
+                    <span class="tag">Assine com dedo ou mouse</span>
+                  </div>
+                  <div class="actions" style="margin:0">
+                    <button class="secondary" id="btnSigClear" type="button">🧽 Limpar</button>
+                    <button class="secondary" id="btnSigSave" type="button">💾 Salvar</button>
+                  </div>
+                </div>
+                <div class="sigCanvasHost">
+                  <canvas id="sigCanvas"></canvas>
+                  <div class="sigPreview" id="sigPreview">
+                    <img id="sigImg" alt="Assinatura salva" />
+                  </div>
+                  <div class="hint">Assine e clique em <b>Salvar</b>. (Isso evita travar.)</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -302,13 +295,13 @@
 
           <div class="actions">
             <button class="primary" id="btnConfirm" disabled>✅ Confirmar entrega</button>
-            <button class="secondary" id="btnPdf">📄 Gerar PDF</button>
-            <button class="danger" id="btnClear">🗑️ Apagar tudo (Firestore)</button>
+            <button class="secondary" id="btnPdf" type="button">📄 Gerar PDF</button>
+            <button class="danger" id="btnClear" type="button">🗑️ Apagar tudo</button>
           </div>
 
-          <div class="footerNote">
-            <b>Importante:</b> para “Apagar tudo”, é preciso ter permissões no Firestore (regras).
-            Se quiser, eu também coloco <b>login</b> (Firebase Auth) pra só a coordenação conseguir apagar/editar.
+          <div class="hint" style="margin-top:10px">
+            Se você abrir esse arquivo direto (duplo clique), o Firebase pode falhar.
+            Use <b>Live Server</b> no VS Code.
           </div>
         </div>
       </section>
@@ -334,7 +327,7 @@
 
   <script type="module">
     /************************************************************
-     *  FIREBASE (com o config que você mandou)
+     * FIREBASE (config seu)
      ************************************************************/
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import {
@@ -368,43 +361,20 @@
     fbStatus.classList.add("ok");
 
     /************************************************************
-     * CONFIG (Turmas/Disciplinas)
+     * TURMAS + DISCIPLINAS
      ************************************************************/
-    // Fundamental I (1º ao 5º) | Fundamental II (6º ao 9º) | EM
-    // + grupos (como você pediu antes)
     const TURMAS = [
-      // Grupos
       "Grupo 1", "Grupo 2", "Grupo 3",
-
-      // Fundamental I
       "1º Ano (Fund I)", "2º Ano (Fund I)", "3º Ano (Fund I)", "4º Ano (Fund I)", "5º Ano (Fund I)",
-
-      // Fundamental II
       "6º Ano (Fund II)", "7º Ano (Fund II)", "8º Ano (Fund II)", "9º Ano (Fund II)",
-
-      // Ensino Médio
       "1ª Série (EM)", "2ª Série (EM)", "3ª Série (EM)"
     ];
 
-    // Disciplinas (pode editar)
     const DISCIPLINAS = [
-      "Língua Portuguesa",
-      "Redação",
-      "Matemática",
-      "Ciências",
-      "Biologia",
-      "Física",
-      "Química",
-      "História",
-      "Geografia",
-      "Sociologia",
-      "Filosofia",
-      "Inglês",
-      "Educação Física",
-      "Artes"
+      "Língua Portuguesa","Redação","Matemática","Ciências","Biologia","Física","Química",
+      "História","Geografia","Sociologia","Filosofia","Inglês","Educação Física","Artes"
     ];
 
-    // Coleção no Firestore
     const COL = "entregas_livros_professor";
 
     /************************************************************
@@ -418,7 +388,6 @@
     const btnConfirm = document.getElementById("btnConfirm");
     const btnPdf = document.getElementById("btnPdf");
     const btnClear = document.getElementById("btnClear");
-
     const elCountBadge = document.getElementById("countBadge");
     const todayBadge = document.getElementById("todayBadge");
 
@@ -428,47 +397,40 @@
     const tableWrap = document.getElementById("tableWrap");
     const showingPill = document.getElementById("showingPill");
 
+    // assinatura
+    const sigCanvas = document.getElementById("sigCanvas");
+    const sigTag = document.getElementById("sigTag");
+    const btnSigClear = document.getElementById("btnSigClear");
+    const btnSigSave = document.getElementById("btnSigSave");
+    const sigPreview = document.getElementById("sigPreview");
+    const sigImg = document.getElementById("sigImg");
+
     /************************************************************
      * HELPERS
      ************************************************************/
     function pad2(n){ return String(n).padStart(2, "0"); }
     function formatDateTime(dt){
       const d = new Date(dt);
-      const dd = pad2(d.getDate());
-      const mm = pad2(d.getMonth()+1);
-      const yyyy = d.getFullYear();
-      const hh = pad2(d.getHours());
-      const mi = pad2(d.getMinutes());
-      const ss = pad2(d.getSeconds());
-      return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+      return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
     }
     function normalize(s){
-      return (s || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/\p{Diacritic}/gu, "")
-        .trim();
+      return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
     }
     function escapeHtml(str){
       return String(str || "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
     function fillSelect(select, items, includeAll=false){
       select.innerHTML = "";
       if(includeAll){
         const opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "Todas";
+        opt.value = ""; opt.textContent = "Todas";
         select.appendChild(opt);
       }
       items.forEach(v => {
         const opt = document.createElement("option");
-        opt.value = v;
-        opt.textContent = v;
+        opt.value = v; opt.textContent = v;
         select.appendChild(opt);
       });
     }
@@ -481,9 +443,128 @@
     todayBadge.textContent = "Hoje: " + formatDateTime(new Date()).slice(0, 10);
 
     /************************************************************
-     * STATE (vem do Firestore em tempo real)
+     * ASSINATURA (SEM TRAVAR)
+     * - Não fazemos varredura de pixels (pesado).
+     * - Só marcamos "assinou" quando o usuário desenha.
      ************************************************************/
-    let rows = []; // {id, turma, disciplina, professor, livro, dataHoraISO}
+    const ctx = sigCanvas.getContext("2d");
+    let isDrawing = false;
+    let signatureDirty = false;     // usuário desenhou
+    let signatureDataUrl = "";      // imagem salva
+
+    function setSigTag(signed){
+      sigTag.textContent = signed ? "Assinatura salva" : "Não assinou";
+      sigTag.style.borderColor = signed ? "rgba(22,163,74,.25)" : "var(--line)";
+      sigTag.style.background = signed ? "rgba(22,163,74,.06)" : "#fff";
+      sigTag.style.color = signed ? "#0f5132" : "var(--muted)";
+    }
+
+    function fitCanvas(){
+      const rect = sigCanvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      const old = sigCanvas.toDataURL("image/png");
+
+      sigCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      sigCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#0f172a";
+
+      // restaura (se tinha algo desenhado)
+      if(signatureDirty){
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, rect.width, rect.height);
+          ctx.drawImage(img, 0, 0, rect.width, rect.height);
+        };
+        img.src = old;
+      }else{
+        ctx.clearRect(0, 0, rect.width, rect.height);
+      }
+    }
+
+    function getPos(e){
+      const rect = sigCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    function startDraw(e){
+      isDrawing = true;
+      const p = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      e.preventDefault?.();
+    }
+    function draw(e){
+      if(!isDrawing) return;
+      const p = getPos(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      signatureDirty = true;
+
+      // se desenhou novamente, invalida a assinatura salva anterior
+      if(signatureDataUrl){
+        signatureDataUrl = "";
+        sigPreview.style.display = "none";
+        setSigTag(false);
+      }
+      e.preventDefault?.();
+    }
+    function endDraw(e){
+      isDrawing = false;
+      e.preventDefault?.();
+    }
+
+    sigCanvas.addEventListener("pointerdown", startDraw);
+    sigCanvas.addEventListener("pointermove", draw);
+    window.addEventListener("pointerup", endDraw);
+    sigCanvas.addEventListener("pointerleave", endDraw);
+
+    btnSigClear.addEventListener("click", () => {
+      const rect = sigCanvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      signatureDirty = false;
+      signatureDataUrl = "";
+      sigPreview.style.display = "none";
+      setSigTag(false);
+    });
+
+    btnSigSave.addEventListener("click", () => {
+      if(!signatureDirty){
+        alert("Assine no quadro antes de salvar.");
+        return;
+      }
+
+      // gera uma imagem menor (mais leve pra salvar no Firestore)
+      const rect = sigCanvas.getBoundingClientRect();
+      const tmp = document.createElement("canvas");
+      tmp.width = 900;
+      tmp.height = Math.round(900 * (rect.height / rect.width));
+      const tctx = tmp.getContext("2d");
+      tctx.fillStyle = "#ffffff";
+      tctx.fillRect(0,0,tmp.width,tmp.height);
+      tctx.drawImage(sigCanvas, 0, 0, tmp.width, tmp.height);
+
+      signatureDataUrl = tmp.toDataURL("image/png", 0.9);
+      sigImg.src = signatureDataUrl;
+      sigPreview.style.display = "block";
+      setSigTag(true);
+    });
+
+    fitCanvas();
+    window.addEventListener("resize", fitCanvas);
+    setSigTag(false);
+
+    /************************************************************
+     * STATE (Firestore)
+     ************************************************************/
+    let rows = []; // {id,turma,disciplina,professor,livro,assinatura,dataHoraISO}
 
     function updateBadges(){
       elCountBadge.textContent = `${rows.length} registro${rows.length === 1 ? "" : "s"}`;
@@ -505,6 +586,35 @@
       }).sort((a,b) => new Date(b.dataHoraISO) - new Date(a.dataHoraISO));
     }
 
+    function openSignature(url){
+      const w = window.open("", "_blank");
+      if(!w) return alert("Pop-up bloqueado. Permita e tente de novo.");
+      w.document.write(`
+        <html lang="pt-BR">
+          <head>
+            <meta name="viewport" content="width=device-width,initial-scale=1"/>
+            <title>Assinatura</title>
+            <style>
+              body{ margin:0; font-family: system-ui, Arial; background:#f7f7fb; }
+              .box{ max-width:900px; margin:18px auto; padding:14px; }
+              .card{ background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:14px; }
+              img{ width:100%; height:auto; display:block; background:#fff; border-radius:12px; }
+              .muted{ color:#6b7280; font-size:12px; margin: 10px 2px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="box">
+              <div class="card">
+                <img src="${url}" alt="Assinatura"/>
+                <div class="muted">Você pode imprimir/salvar pelo navegador.</div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      w.document.close();
+    }
+
     function render(){
       updateBadges();
       const filtered = getFiltered();
@@ -514,7 +624,7 @@
         tableWrap.innerHTML = `
           <div class="empty">
             Nenhum registro ainda (ou nada bateu com o filtro).<br/>
-            Registre uma entrega no painel ao lado e ela aparece aqui.
+            Registre uma entrega no painel ao lado.
           </div>
         `;
         return;
@@ -530,6 +640,7 @@
                 <th>Disciplina</th>
                 <th>Professor</th>
                 <th>Livro</th>
+                <th>Assinatura</th>
                 <th class="nowrap">Ações</th>
               </tr>
             </thead>
@@ -541,6 +652,12 @@
                   <td>${escapeHtml(r.disciplina)}</td>
                   <td><b>${escapeHtml(r.professor)}</b></td>
                   <td>${escapeHtml(r.livro)}</td>
+                  <td>
+                    ${r.assinatura
+                      ? `<button class="secondary" style="padding:8px 10px;border-radius:10px" data-sig="${r.id}">👁️ Ver</button>`
+                      : `<span class="pill" style="background:rgba(245,158,11,.08)">Sem</span>`
+                    }
+                  </td>
                   <td class="nowrap">
                     <button class="secondary" style="padding:8px 10px;border-radius:10px" data-edit="${r.id}">✏️ Editar</button>
                     <button class="danger" style="padding:8px 10px;border-radius:10px" data-del="${r.id}">🗑️ Excluir</button>
@@ -552,7 +669,14 @@
         </div>
       `;
 
-      // ações
+      tableWrap.querySelectorAll("[data-sig]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-sig");
+          const current = rows.find(x => x.id === id);
+          if(current?.assinatura) openSignature(current.assinatura);
+        });
+      });
+
       tableWrap.querySelectorAll("[data-del]").forEach(btn => {
         btn.addEventListener("click", async () => {
           const id = btn.getAttribute("data-del");
@@ -590,14 +714,13 @@
     }
 
     /************************************************************
-     * FIRESTORE: ouvir em tempo real
+     * Firestore realtime
      ************************************************************/
     try{
       const qy = query(collection(db, COL), orderBy("createdAt", "desc"));
       onSnapshot(qy, (snap) => {
         rows = snap.docs.map(d => {
           const data = d.data();
-          // createdAt pode ser Timestamp (firebase) -> converte pro ISO
           const created = data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt || new Date());
           return {
             id: d.id,
@@ -605,13 +728,14 @@
             disciplina: data.disciplina || "",
             professor: data.professor || "",
             livro: data.livro || "",
+            assinatura: data.assinatura || "",
             dataHoraISO: (created instanceof Date ? created : new Date(created)).toISOString()
           };
         });
         render();
       }, (err) => {
         console.error(err);
-        fbStatus.textContent = "Firebase: erro (veja regras/console)";
+        fbStatus.textContent = "Firebase: erro (regras/console)";
         fbStatus.classList.remove("ok");
         fbStatus.classList.add("bad");
       });
@@ -623,14 +747,13 @@
     }
 
     /************************************************************
-     * FORM: confirmar entrega
+     * FORM
      ************************************************************/
     function validateForm(){
-      const professor = elProf.value.trim();
-      const livro = elLivro.value.trim();
+      if(!signatureDataUrl) return { ok:false, msg:"Falta salvar a assinatura. Assine e clique em “Salvar”." };
       if(!elCheck.checked) return { ok:false, msg:"Marque o check para confirmar." };
-      if(!professor) return { ok:false, msg:"Preencha o nome do professor." };
-      if(!livro) return { ok:false, msg:"Preencha o livro entregue." };
+      if(!elProf.value.trim()) return { ok:false, msg:"Preencha o nome do professor." };
+      if(!elLivro.value.trim()) return { ok:false, msg:"Preencha o livro entregue." };
       return { ok:true };
     }
 
@@ -648,6 +771,7 @@
           disciplina: elDisc.value,
           professor: elProf.value.trim(),
           livro: elLivro.value.trim(),
+          assinatura: signatureDataUrl,
           createdAt: serverTimestamp()
         });
 
@@ -655,9 +779,17 @@
         elLivro.value = "";
         elCheck.checked = false;
         btnConfirm.disabled = true;
+
+        // reset assinatura
+        const rect = sigCanvas.getBoundingClientRect();
+        ctx.clearRect(0,0,rect.width,rect.height);
+        signatureDirty = false;
+        signatureDataUrl = "";
+        sigPreview.style.display = "none";
+        setSigTag(false);
       }catch(err){
         console.error(err);
-        alert("Falha ao salvar no Firestore. Verifique as regras do Firebase.");
+        alert("Falha ao salvar no Firestore. Verifique regras do Firebase.");
       }
     });
 
@@ -667,9 +799,9 @@
     [fTurma, fDisc, fBusca].forEach(el => el.addEventListener("input", render));
 
     /************************************************************
-     * PDF
+     * PDF (tabela + páginas de assinaturas)
      ************************************************************/
-    btnPdf.addEventListener("click", () => {
+    btnPdf.addEventListener("click", async () => {
       const filtered = getFiltered();
       if(filtered.length === 0){
         alert("Não há registros para gerar PDF (verifique os filtros).");
@@ -698,23 +830,51 @@
         r.turma,
         r.disciplina,
         r.professor,
-        r.livro
+        r.livro,
+        r.assinatura ? "Sim" : "Não"
       ]));
 
       docpdf.autoTable({
-        head: [[ "Data/Hora", "Turma", "Disciplina", "Professor", "Livro" ]],
+        head: [[ "Data/Hora", "Turma", "Disciplina", "Professor", "Livro", "Assinado" ]],
         body,
         startY: 32,
         styles: { font:"helvetica", fontSize: 9, cellPadding: 2.2 },
         headStyles: { fontStyle: "bold" },
         columnStyles: {
           0: { cellWidth: 35 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 40 },
+          1: { cellWidth: 38 },
+          2: { cellWidth: 42 },
           3: { cellWidth: 55 },
-          4: { cellWidth: 120 }
+          4: { cellWidth: 110 },
+          5: { cellWidth: 20 }
         }
       });
+
+      // páginas extras: assinaturas
+      const signed = filtered.filter(r => !!r.assinatura);
+      for(const r of signed){
+        docpdf.addPage("a4", "portrait");
+        docpdf.setFont("helvetica", "bold");
+        docpdf.setFontSize(13);
+        docpdf.text("Assinatura do Professor", 14, 16);
+
+        docpdf.setFont("helvetica", "normal");
+        docpdf.setFontSize(10);
+        docpdf.text(`Professor: ${r.professor}`, 14, 24);
+        docpdf.text(`Turma: ${r.turma} | Disciplina: ${r.disciplina}`, 14, 30);
+        docpdf.text(`Data/Hora: ${formatDateTime(r.dataHoraISO)}`, 14, 36);
+        docpdf.text(`Livro: ${r.livro}`, 14, 42);
+
+        // imagem da assinatura
+        try{
+          docpdf.addImage(r.assinatura, "PNG", 14, 52, 180, 60);
+        }catch(e){
+          docpdf.text("Assinatura indisponível para renderizar.", 14, 56);
+        }
+
+        docpdf.setDrawColor(180);
+        docpdf.rect(14, 52, 180, 60);
+      }
 
       docpdf.save("relatorio-entrega-livros-professor.pdf");
     });
@@ -723,7 +883,7 @@
      * APAGAR TUDO (Firestore)
      ************************************************************/
     btnClear.addEventListener("click", async () => {
-      if(!confirm("Tem certeza que deseja apagar TODOS os registros do Firestore?")) return;
+      if(!confirm("Tem certeza que deseja apagar TODOS os registros?")) return;
 
       try{
         const snap = await getDocs(collection(db, COL));
@@ -736,7 +896,7 @@
       }
     });
 
-    // render inicial (enquanto snapshot não chega)
+    // render inicial
     render();
   </script>
 </body>
