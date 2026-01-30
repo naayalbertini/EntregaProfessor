@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Entrega de Livros do Professor</title>
+
+  <!-- PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    :root{
+      /* Tema CLARO */
+      --bg: #f6f8ff;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted:#475569;
+      --line: #e2e8f0;
+
+      --primary:#2563eb;
+      --primary2:#1d4ed8;
+
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --radius: 16px;
+      --radius2: 12px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background:
+        radial-gradient(1000px 500px at 15% 0%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(900px 500px at 90% 10%, rgba(14,165,233,.10), transparent 60%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .wrap{ max-width: 1200px; margin: 24px auto; padding: 0 16px 32px; }
+
+    header{
+      display:flex;
+      gap: 14px;
+      align-items:flex-start;
+      justify-content:space-between;
+      margin-bottom: 16px;
+    }
+    h1{ margin:0; font-size: 22px; letter-spacing:.2px; }
+    .sub{ margin:6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .badge{
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.8);
+      white-space: nowrap;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 390px 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .cardHeader{
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      background: linear-gradient(180deg, rgba(37,99,235,.06), transparent);
+    }
+    .cardHeader .h{ font-weight: 800; font-size: 14px; letter-spacing:.2px; }
+
+    .cardBody{ padding: 16px; }
+
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+
+    .row{ display:grid; gap: 12px; margin-bottom: 12px; }
+    .row.two{ grid-template-columns: 1fr 1fr; }
+    @media (max-width: 520px){ .row.two{ grid-template-columns: 1fr; } }
+
+    input, select{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      outline: none;
+    }
+    input::placeholder{ color: rgba(71,85,105,.75); }
+
+    .hint{ font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.35; }
+
+    .checkline{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px dashed rgba(37,99,235,.35);
+      background: rgba(37,99,235,.05);
+      margin-top: 6px;
+    }
+    .checkline input[type="checkbox"]{
+      width: 18px; height: 18px; margin:0;
+      accent-color: var(--ok);
+    }
+    .checkline .txt{ font-size: 13px; color: var(--text); }
+
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button{
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      cursor:pointer;
+      color: white;
+      font-weight: 800;
+      letter-spacing:.2px;
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      transition: transform .05s ease, filter .15s ease, background .15s ease;
+      user-select:none;
+    }
+    button:active{ transform: translateY(1px); }
+
+    button.primary{ background: linear-gradient(180deg, var(--primary), var(--primary2)); }
+    button.primary:disabled{ opacity:.55; cursor:not-allowed; }
+
+    button.secondary{
+      background: #0f172a;
+      color: #fff;
+      opacity:.9;
+    }
+    button.secondary:hover{ filter: brightness(1.05); }
+
+    button.danger{ background: var(--danger); }
+    button.danger:hover{ filter: brightness(1.05); }
+
+    .toolbar{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.8);
+    }
+    .mini{ display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
+    .chip{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(255,255,255,.9);
+    }
+
+    table{ width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td{ padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th{
+      text-align:left;
+      color: rgba(15,23,42,.7);
+      font-size: 12px;
+      letter-spacing:.25px;
+      text-transform: uppercase;
+      background: rgba(37,99,235,.04);
+    }
+    td{ color: rgba(15,23,42,.92); }
+    .empty{ padding: 18px 16px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(37,99,235,.04);
+      font-size: 12px;
+      color: rgba(15,23,42,.9);
+      white-space: nowrap;
+    }
+    .dot{
+      width: 8px; height: 8px; border-radius: 999px;
+      background: var(--ok);
+      box-shadow: 0 0 0 3px rgba(22,163,74,.12);
+    }
+    .nowrap{ white-space: nowrap; }
+
+    .footerNote{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .topline{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .status{
+      font-size:12px;
+      color: var(--muted);
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+    }
+    .status.ok{ border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.06); color: #0f5132; }
+    .status.bad{ border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.06); color: #7f1d1d; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Entrega de Livros do Professor</h1>
+        <p class="sub">
+          Turmas do <b>Fundamental I</b>, <b>Fundamental II</b> e <b>Ensino Médio</b>.
+          Preencha professor + livro, marque o check e confirme. Tudo salva no <b>Firebase Firestore</b>.
+        </p>
+      </div>
+      <div class="topline">
+        <div class="badge" id="todayBadge">—</div>
+        <div class="status" id="fbStatus">Firebase: conectando…</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- FORM -->
+      <section class="card">
+        <div class="cardHeader">
+          <div class="h">Registrar entrega</div>
+          <span class="badge" id="countBadge">0 registros</span>
+        </div>
+
+        <div class="cardBody">
+          <div class="row two">
+            <div>
+              <label for="turma">Turma</label>
+              <select id="turma"></select>
+            </div>
+            <div>
+              <label for="disciplina">Disciplina</label>
+              <select id="disciplina"></select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="professor">Nome do professor</label>
+              <input id="professor" type="text" placeholder="Ex.: Maria Silva" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="livro">Livro entregue</label>
+              <input id="livro" type="text" placeholder="Ex.: Matemática – Livro do Professor (Vol. 1)" />
+              <div class="hint">Você pode incluir volume/edição. Ex.: “Coleção X – 2026 – Vol. 2”.</div>
+            </div>
+          </div>
+
+          <div class="checkline">
+            <input id="confirmCheck" type="checkbox" />
+            <div class="txt">Marque para confirmar e liberar o botão.</div>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="btnConfirm" disabled>✅ Confirmar entrega</button>
+            <button class="secondary" id="btnPdf">📄 Gerar PDF</button>
+            <button class="danger" id="btnClear">🗑️ Apagar tudo (Firestore)</button>
+          </div>
+
+          <div class="footerNote">
+            <b>Importante:</b> para “Apagar tudo”, é preciso ter permissões no Firestore (regras).
+            Se quiser, eu também coloco <b>login</b> (Firebase Auth) pra só a coordenação conseguir apagar/editar.
+          </div>
+        </div>
+      </section>
+
+      <!-- LISTA -->
+      <section class="card">
+        <div class="toolbar">
+          <div class="mini">
+            <span class="chip">Filtros</span>
+            <select id="fTurma" title="Filtrar por turma"></select>
+            <select id="fDisciplina" title="Filtrar por disciplina"></select>
+            <input id="fBusca" type="text" placeholder="Buscar professor ou livro..." style="min-width:220px" />
+          </div>
+          <div class="pill" id="showingPill"><span class="dot"></span> Mostrando 0</div>
+        </div>
+
+        <div class="cardBody" style="padding:0">
+          <div id="tableWrap"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+    /************************************************************
+     *  FIREBASE (com o config que você mandou)
+     ************************************************************/
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      onSnapshot,
+      query,
+      orderBy,
+      deleteDoc,
+      doc,
+      updateDoc,
+      getDocs,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDu0c_4UA0pWBhZF8HL82oCH63Zrdk14O8",
+      authDomain: "entregalivros.firebaseapp.com",
+      projectId: "entregalivros",
+      storageBucket: "entregalivros.firebasestorage.app",
+      messagingSenderId: "428742018442",
+      appId: "1:428742018442:web:718e3a0046fd718f44f473"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const fbStatus = document.getElementById("fbStatus");
+    fbStatus.textContent = "Firebase: conectado";
+    fbStatus.classList.add("ok");
+
+    /************************************************************
+     * CONFIG (Turmas/Disciplinas)
+     ************************************************************/
+    // Fundamental I (1º ao 5º) | Fundamental II (6º ao 9º) | EM
+    // + grupos (como você pediu antes)
+    const TURMAS = [
+      // Grupos
+      "Grupo 1", "Grupo 2", "Grupo 3",
+
+      // Fundamental I
+      "1º Ano (Fund I)", "2º Ano (Fund I)", "3º Ano (Fund I)", "4º Ano (Fund I)", "5º Ano (Fund I)",
+
+      // Fundamental II
+      "6º Ano (Fund II)", "7º Ano (Fund II)", "8º Ano (Fund II)", "9º Ano (Fund II)",
+
+      // Ensino Médio
+      "1ª Série (EM)", "2ª Série (EM)", "3ª Série (EM)"
+    ];
+
+    // Disciplinas (pode editar)
+    const DISCIPLINAS = [
+      "Língua Portuguesa",
+      "Redação",
+      "Matemática",
+      "Ciências",
+      "Biologia",
+      "Física",
+      "Química",
+      "História",
+      "Geografia",
+      "Sociologia",
+      "Filosofia",
+      "Inglês",
+      "Educação Física",
+      "Artes"
+    ];
+
+    // Coleção no Firestore
+    const COL = "entregas_livros_professor";
+
+    /************************************************************
+     * DOM
+     ************************************************************/
+    const elTurma = document.getElementById("turma");
+    const elDisc = document.getElementById("disciplina");
+    const elProf = document.getElementById("professor");
+    const elLivro = document.getElementById("livro");
+    const elCheck = document.getElementById("confirmCheck");
+    const btnConfirm = document.getElementById("btnConfirm");
+    const btnPdf = document.getElementById("btnPdf");
+    const btnClear = document.getElementById("btnClear");
+
+    const elCountBadge = document.getElementById("countBadge");
+    const todayBadge = document.getElementById("todayBadge");
+
+    const fTurma = document.getElementById("fTurma");
+    const fDisc = document.getElementById("fDisciplina");
+    const fBusca = document.getElementById("fBusca");
+    const tableWrap = document.getElementById("tableWrap");
+    const showingPill = document.getElementById("showingPill");
+
+    /************************************************************
+     * HELPERS
+     ************************************************************/
+    function pad2(n){ return String(n).padStart(2, "0"); }
+    function formatDateTime(dt){
+      const d = new Date(dt);
+      const dd = pad2(d.getDate());
+      const mm = pad2(d.getMonth()+1);
+      const yyyy = d.getFullYear();
+      const hh = pad2(d.getHours());
+      const mi = pad2(d.getMinutes());
+      const ss = pad2(d.getSeconds());
+      return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+    }
+    function normalize(s){
+      return (s || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .trim();
+    }
+    function escapeHtml(str){
+      return String(str || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function fillSelect(select, items, includeAll=false){
+      select.innerHTML = "";
+      if(includeAll){
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Todas";
+        select.appendChild(opt);
+      }
+      items.forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        select.appendChild(opt);
+      });
+    }
+
+    fillSelect(elTurma, TURMAS);
+    fillSelect(elDisc, DISCIPLINAS);
+    fillSelect(fTurma, TURMAS, true);
+    fillSelect(fDisc, DISCIPLINAS, true);
+
+    todayBadge.textContent = "Hoje: " + formatDateTime(new Date()).slice(0, 10);
+
+    /************************************************************
+     * STATE (vem do Firestore em tempo real)
+     ************************************************************/
+    let rows = []; // {id, turma, disciplina, professor, livro, dataHoraISO}
+
+    function updateBadges(){
+      elCountBadge.textContent = `${rows.length} registro${rows.length === 1 ? "" : "s"}`;
+    }
+
+    function getFiltered(){
+      const turma = fTurma.value;
+      const disc = fDisc.value;
+      const q = normalize(fBusca.value);
+
+      return rows.filter(r => {
+        if(turma && r.turma !== turma) return false;
+        if(disc && r.disciplina !== disc) return false;
+        if(q){
+          const blob = normalize(`${r.professor} ${r.livro} ${r.turma} ${r.disciplina}`);
+          if(!blob.includes(q)) return false;
+        }
+        return true;
+      }).sort((a,b) => new Date(b.dataHoraISO) - new Date(a.dataHoraISO));
+    }
+
+    function render(){
+      updateBadges();
+      const filtered = getFiltered();
+      showingPill.innerHTML = `<span class="dot"></span> Mostrando ${filtered.length}`;
+
+      if(filtered.length === 0){
+        tableWrap.innerHTML = `
+          <div class="empty">
+            Nenhum registro ainda (ou nada bateu com o filtro).<br/>
+            Registre uma entrega no painel ao lado e ela aparece aqui.
+          </div>
+        `;
+        return;
+      }
+
+      tableWrap.innerHTML = `
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Turma</th>
+                <th>Disciplina</th>
+                <th>Professor</th>
+                <th>Livro</th>
+                <th class="nowrap">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(r => `
+                <tr>
+                  <td class="nowrap">${formatDateTime(r.dataHoraISO)}</td>
+                  <td><span class="pill">${escapeHtml(r.turma)}</span></td>
+                  <td>${escapeHtml(r.disciplina)}</td>
+                  <td><b>${escapeHtml(r.professor)}</b></td>
+                  <td>${escapeHtml(r.livro)}</td>
+                  <td class="nowrap">
+                    <button class="secondary" style="padding:8px 10px;border-radius:10px" data-edit="${r.id}">✏️ Editar</button>
+                    <button class="danger" style="padding:8px 10px;border-radius:10px" data-del="${r.id}">🗑️ Excluir</button>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      // ações
+      tableWrap.querySelectorAll("[data-del]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-del");
+          if(!confirm("Excluir este registro?")) return;
+          await deleteDoc(doc(db, COL, id));
+        });
+      });
+
+      tableWrap.querySelectorAll("[data-edit]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-edit");
+          const current = rows.find(x => x.id === id);
+          if(!current) return;
+
+          const nProf = prompt("Editar nome do professor:", current.professor);
+          if(nProf === null) return;
+
+          const nLivro = prompt("Editar livro entregue:", current.livro);
+          if(nLivro === null) return;
+
+          const nTurma = prompt("Editar turma (exatamente como aparece):\n" + TURMAS.join(" | "), current.turma);
+          if(nTurma === null) return;
+
+          const nDisc = prompt("Editar disciplina (exatamente como aparece):\n" + DISCIPLINAS.join(" | "), current.disciplina);
+          if(nDisc === null) return;
+
+          await updateDoc(doc(db, COL, id), {
+            professor: (nProf || "").trim(),
+            livro: (nLivro || "").trim(),
+            turma: (nTurma || "").trim(),
+            disciplina: (nDisc || "").trim()
+          });
+        });
+      });
+    }
+
+    /************************************************************
+     * FIRESTORE: ouvir em tempo real
+     ************************************************************/
+    try{
+      const qy = query(collection(db, COL), orderBy("createdAt", "desc"));
+      onSnapshot(qy, (snap) => {
+        rows = snap.docs.map(d => {
+          const data = d.data();
+          // createdAt pode ser Timestamp (firebase) -> converte pro ISO
+          const created = data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt || new Date());
+          return {
+            id: d.id,
+            turma: data.turma || "",
+            disciplina: data.disciplina || "",
+            professor: data.professor || "",
+            livro: data.livro || "",
+            dataHoraISO: (created instanceof Date ? created : new Date(created)).toISOString()
+          };
+        });
+        render();
+      }, (err) => {
+        console.error(err);
+        fbStatus.textContent = "Firebase: erro (veja regras/console)";
+        fbStatus.classList.remove("ok");
+        fbStatus.classList.add("bad");
+      });
+    }catch(err){
+      console.error(err);
+      fbStatus.textContent = "Firebase: erro ao iniciar";
+      fbStatus.classList.remove("ok");
+      fbStatus.classList.add("bad");
+    }
+
+    /************************************************************
+     * FORM: confirmar entrega
+     ************************************************************/
+    function validateForm(){
+      const professor = elProf.value.trim();
+      const livro = elLivro.value.trim();
+      if(!elCheck.checked) return { ok:false, msg:"Marque o check para confirmar." };
+      if(!professor) return { ok:false, msg:"Preencha o nome do professor." };
+      if(!livro) return { ok:false, msg:"Preencha o livro entregue." };
+      return { ok:true };
+    }
+
+    elCheck.addEventListener("change", () => {
+      btnConfirm.disabled = !elCheck.checked;
+    });
+
+    btnConfirm.addEventListener("click", async () => {
+      const v = validateForm();
+      if(!v.ok){ alert(v.msg); return; }
+
+      try{
+        await addDoc(collection(db, COL), {
+          turma: elTurma.value,
+          disciplina: elDisc.value,
+          professor: elProf.value.trim(),
+          livro: elLivro.value.trim(),
+          createdAt: serverTimestamp()
+        });
+
+        elProf.value = "";
+        elLivro.value = "";
+        elCheck.checked = false;
+        btnConfirm.disabled = true;
+      }catch(err){
+        console.error(err);
+        alert("Falha ao salvar no Firestore. Verifique as regras do Firebase.");
+      }
+    });
+
+    /************************************************************
+     * FILTROS
+     ************************************************************/
+    [fTurma, fDisc, fBusca].forEach(el => el.addEventListener("input", render));
+
+    /************************************************************
+     * PDF
+     ************************************************************/
+    btnPdf.addEventListener("click", () => {
+      const filtered = getFiltered();
+      if(filtered.length === 0){
+        alert("Não há registros para gerar PDF (verifique os filtros).");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const docpdf = new jsPDF({ orientation:"landscape", unit:"mm", format:"a4" });
+
+      const nowStr = formatDateTime(new Date());
+      docpdf.setFont("helvetica", "bold");
+      docpdf.setFontSize(14);
+      docpdf.text("Relatório - Entrega de Livros do Professor", 14, 14);
+
+      docpdf.setFont("helvetica", "normal");
+      docpdf.setFontSize(10);
+      docpdf.text(`Gerado em: ${nowStr}`, 14, 20);
+
+      const turmaF = fTurma.value ? fTurma.value : "Todas";
+      const discF = fDisc.value ? fDisc.value : "Todas";
+      const buscaF = fBusca.value.trim() ? fBusca.value.trim() : "—";
+      docpdf.text(`Filtros: Turma=${turmaF} | Disciplina=${discF} | Busca=${buscaF}`, 14, 26);
+
+      const body = filtered.map(r => ([
+        formatDateTime(r.dataHoraISO),
+        r.turma,
+        r.disciplina,
+        r.professor,
+        r.livro
+      ]));
+
+      docpdf.autoTable({
+        head: [[ "Data/Hora", "Turma", "Disciplina", "Professor", "Livro" ]],
+        body,
+        startY: 32,
+        styles: { font:"helvetica", fontSize: 9, cellPadding: 2.2 },
+        headStyles: { fontStyle: "bold" },
+        columnStyles: {
+          0: { cellWidth: 35 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 40 },
+          3: { cellWidth: 55 },
+          4: { cellWidth: 120 }
+        }
+      });
+
+      docpdf.save("relatorio-entrega-livros-professor.pdf");
+    });
+
+    /************************************************************
+     * APAGAR TUDO (Firestore)
+     ************************************************************/
+    btnClear.addEventListener("click", async () => {
+      if(!confirm("Tem certeza que deseja apagar TODOS os registros do Firestore?")) return;
+
+      try{
+        const snap = await getDocs(collection(db, COL));
+        const deletes = snap.docs.map(d => deleteDoc(doc(db, COL, d.id)));
+        await Promise.all(deletes);
+        alert("Registros apagados!");
+      }catch(err){
+        console.error(err);
+        alert("Falha ao apagar. Verifique regras/permissões do Firestore.");
+      }
+    });
+
+    // render inicial (enquanto snapshot não chega)
+    render();
+  </script>
+</body>
+</html>
