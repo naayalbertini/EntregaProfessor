@@ -282,7 +282,7 @@
                   <div class="sigPreview" id="sigPreview">
                     <img id="sigImg" alt="Assinatura salva" />
                   </div>
-                  <div class="hint">Assine e clique em <b>Salvar</b>. (Isso evita travar.)</div>
+                  <div class="hint">Assine e clique em <b>Salvar</b>. (A assinatura vai para o <b>Storage</b>.)</div>
                 </div>
               </div>
             </div>
@@ -327,7 +327,7 @@
 
   <script type="module">
     /************************************************************
-     * FIREBASE (config seu)
+     * FIREBASE
      ************************************************************/
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import {
@@ -341,8 +341,17 @@
       doc,
       updateDoc,
       getDocs,
-      serverTimestamp
+      serverTimestamp,
+      limit
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    import {
+      getStorage,
+      ref,
+      uploadBytes,
+      getDownloadURL,
+      deleteObject
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDu0c_4UA0pWBhZF8HL82oCH63Zrdk14O8",
@@ -355,10 +364,23 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     const fbStatus = document.getElementById("fbStatus");
-    fbStatus.textContent = "Firebase: conectado";
-    fbStatus.classList.add("ok");
+
+    /************************************************************
+     * TESTE REAL DE CONEXÃO (Firestore)
+     ************************************************************/
+    async function setFirebaseOk(){
+      fbStatus.textContent = "Firebase: conectado";
+      fbStatus.classList.remove("bad");
+      fbStatus.classList.add("ok");
+    }
+    async function setFirebaseBad(){
+      fbStatus.textContent = "Firebase: erro (regras/console)";
+      fbStatus.classList.remove("ok");
+      fbStatus.classList.add("bad");
+    }
 
     /************************************************************
      * TURMAS + DISCIPLINAS
@@ -413,6 +435,10 @@
       const d = new Date(dt);
       return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
     }
+    function formatDateOnly(dt){
+      const d = new Date(dt);
+      return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+    }
     function normalize(s){
       return (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
     }
@@ -434,24 +460,6 @@
         select.appendChild(opt);
       });
     }
-
-    fillSelect(elTurma, TURMAS);
-    fillSelect(elDisc, DISCIPLINAS);
-    fillSelect(fTurma, TURMAS, true);
-    fillSelect(fDisc, DISCIPLINAS, true);
-
-    todayBadge.textContent = "Hoje: " + formatDateTime(new Date()).slice(0, 10);
-
-    /************************************************************
-     * ASSINATURA (SEM TRAVAR)
-     * - Não fazemos varredura de pixels (pesado).
-     * - Só marcamos "assinou" quando o usuário desenha.
-     ************************************************************/
-    const ctx = sigCanvas.getContext("2d");
-    let isDrawing = false;
-    let signatureDirty = false;     // usuário desenhou
-    let signatureDataUrl = "";      // imagem salva
-
     function setSigTag(signed){
       sigTag.textContent = signed ? "Assinatura salva" : "Não assinou";
       sigTag.style.borderColor = signed ? "rgba(22,163,74,.25)" : "var(--line)";
@@ -459,31 +467,47 @@
       sigTag.style.color = signed ? "#0f5132" : "var(--muted)";
     }
 
+    fillSelect(elTurma, TURMAS);
+    fillSelect(elDisc, DISCIPLINAS);
+    fillSelect(fTurma, TURMAS, true);
+    fillSelect(fDisc, DISCIPLINAS, true);
+
+    todayBadge.textContent = "Hoje: " + formatDateOnly(new Date());
+
+    /************************************************************
+     * ASSINATURA (Canvas) + upload no Storage
+     ************************************************************/
+    const ctx = sigCanvas.getContext("2d");
+    let isDrawing = false;
+    let signatureDirty = false;          // usuário desenhou
+    let signatureUrl = "";              // URL no Storage
+    let signatureStoragePath = "";      // caminho no storage (pra excluir se precisar)
+
     function fitCanvas(){
       const rect = sigCanvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
 
-      const old = sigCanvas.toDataURL("image/png");
+      const old = signatureDirty ? sigCanvas.toDataURL("image/png") : "";
 
       sigCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
       sigCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
 
+      // desenhar em "px" de CSS
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.lineWidth = 2.2;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.strokeStyle = "#0f172a";
 
-      // restaura (se tinha algo desenhado)
-      if(signatureDirty){
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      if(old){
         const img = new Image();
         img.onload = () => {
           ctx.clearRect(0, 0, rect.width, rect.height);
           ctx.drawImage(img, 0, 0, rect.width, rect.height);
         };
         img.src = old;
-      }else{
-        ctx.clearRect(0, 0, rect.width, rect.height);
       }
     }
 
@@ -508,11 +532,13 @@
       ctx.stroke();
       signatureDirty = true;
 
-      // se desenhou novamente, invalida a assinatura salva anterior
-      if(signatureDataUrl){
-        signatureDataUrl = "";
+      // se desenhou de novo, invalida a assinatura salva anterior
+      if(signatureUrl){
+        signatureUrl = "";
+        signatureStoragePath = "";
         sigPreview.style.display = "none";
         setSigTag(false);
+        syncConfirmState();
       }
       e.preventDefault?.();
     }
@@ -526,35 +552,76 @@
     window.addEventListener("pointerup", endDraw);
     sigCanvas.addEventListener("pointerleave", endDraw);
 
-    btnSigClear.addEventListener("click", () => {
+    btnSigClear.addEventListener("click", async () => {
       const rect = sigCanvas.getBoundingClientRect();
       ctx.clearRect(0, 0, rect.width, rect.height);
       signatureDirty = false;
-      signatureDataUrl = "";
+
+      // se tinha assinatura no Storage e quer limpar, apenas zera no form.
+      // (não apago automaticamente do Storage aqui pra não apagar assinaturas de registros já salvos)
+      signatureUrl = "";
+      signatureStoragePath = "";
+
       sigPreview.style.display = "none";
       setSigTag(false);
+      syncConfirmState();
     });
 
-    btnSigSave.addEventListener("click", () => {
-      if(!signatureDirty){
-        alert("Assine no quadro antes de salvar.");
-        return;
-      }
-
-      // gera uma imagem menor (mais leve pra salvar no Firestore)
+    async function canvasToBlobJpeg(){
+      // gera uma imagem menor e leve
       const rect = sigCanvas.getBoundingClientRect();
       const tmp = document.createElement("canvas");
       tmp.width = 900;
       tmp.height = Math.round(900 * (rect.height / rect.width));
       const tctx = tmp.getContext("2d");
+
       tctx.fillStyle = "#ffffff";
       tctx.fillRect(0,0,tmp.width,tmp.height);
       tctx.drawImage(sigCanvas, 0, 0, tmp.width, tmp.height);
 
-      signatureDataUrl = tmp.toDataURL("image/png", 0.9);
-      sigImg.src = signatureDataUrl;
-      sigPreview.style.display = "block";
-      setSigTag(true);
+      return await new Promise((resolve) => {
+        tmp.toBlob((blob) => resolve(blob), "image/jpeg", 0.75);
+      });
+    }
+
+    btnSigSave.addEventListener("click", async () => {
+      if(!signatureDirty){
+        alert("Assine no quadro antes de salvar.");
+        return;
+      }
+
+      btnSigSave.disabled = true;
+      btnSigSave.textContent = "⏳ Salvando...";
+
+      try{
+        const blob = await canvasToBlobJpeg();
+        if(!blob){
+          alert("Não foi possível gerar a assinatura. Tente novamente.");
+          return;
+        }
+
+        const safeTime = Date.now();
+        const path = `assinaturas/${safeTime}-${Math.random().toString(16).slice(2)}.jpg`;
+        const storageRef = ref(storage, path);
+
+        await uploadBytes(storageRef, blob, { contentType: "image/jpeg" });
+        const url = await getDownloadURL(storageRef);
+
+        signatureUrl = url;
+        signatureStoragePath = path;
+
+        sigImg.src = signatureUrl;
+        sigPreview.style.display = "block";
+        setSigTag(true);
+
+        syncConfirmState();
+      }catch(err){
+        console.error(err);
+        alert("Falha ao salvar assinatura no Storage. Verifique as regras do Storage.");
+      }finally{
+        btnSigSave.disabled = false;
+        btnSigSave.textContent = "💾 Salvar";
+      }
     });
 
     fitCanvas();
@@ -564,7 +631,7 @@
     /************************************************************
      * STATE (Firestore)
      ************************************************************/
-    let rows = []; // {id,turma,disciplina,professor,livro,assinatura,dataHoraISO}
+    let rows = []; // {id,turma,disciplina,professor,livro,assinatura,dataHoraISO, signaturePath}
 
     function updateBadges(){
       elCountBadge.textContent = `${rows.length} registro${rows.length === 1 ? "" : "s"}`;
@@ -680,8 +747,23 @@
       tableWrap.querySelectorAll("[data-del]").forEach(btn => {
         btn.addEventListener("click", async () => {
           const id = btn.getAttribute("data-del");
+          const current = rows.find(x => x.id === id);
+          if(!current) return;
+
           if(!confirm("Excluir este registro?")) return;
+
+          // apaga doc
           await deleteDoc(doc(db, COL, id));
+
+          // tenta apagar assinatura do storage se tiver path salvo
+          if(current.signaturePath){
+            try{
+              await deleteObject(ref(storage, current.signaturePath));
+            }catch(e){
+              // não trava a exclusão se não conseguir apagar arquivo
+              console.warn("Não consegui apagar assinatura no Storage:", e);
+            }
+          }
         });
       });
 
@@ -714,9 +796,30 @@
     }
 
     /************************************************************
+     * VALIDAR / LIBERAR BOTÃO CONFIRMAR
+     ************************************************************/
+    function syncConfirmState(){
+      const ok =
+        elCheck.checked &&
+        !!elProf.value.trim() &&
+        !!elLivro.value.trim() &&
+        !!signatureUrl;
+
+      btnConfirm.disabled = !ok;
+    }
+
+    [elCheck, elProf, elLivro].forEach(el => el.addEventListener("input", syncConfirmState));
+    elCheck.addEventListener("change", syncConfirmState);
+
+    /************************************************************
      * Firestore realtime
      ************************************************************/
     try{
+      // teste de leitura (pra status)
+      getDocs(query(collection(db, COL), limit(1)))
+        .then(setFirebaseOk)
+        .catch((e)=>{ console.error(e); setFirebaseBad(); });
+
       const qy = query(collection(db, COL), orderBy("createdAt", "desc"));
       onSnapshot(qy, (snap) => {
         rows = snap.docs.map(d => {
@@ -729,41 +832,31 @@
             professor: data.professor || "",
             livro: data.livro || "",
             assinatura: data.assinatura || "",
+            signaturePath: data.signaturePath || "",
             dataHoraISO: (created instanceof Date ? created : new Date(created)).toISOString()
           };
         });
         render();
       }, (err) => {
         console.error(err);
-        fbStatus.textContent = "Firebase: erro (regras/console)";
-        fbStatus.classList.remove("ok");
-        fbStatus.classList.add("bad");
+        setFirebaseBad();
       });
     }catch(err){
       console.error(err);
-      fbStatus.textContent = "Firebase: erro ao iniciar";
-      fbStatus.classList.remove("ok");
-      fbStatus.classList.add("bad");
+      setFirebaseBad();
     }
 
     /************************************************************
-     * FORM
+     * FORM - CONFIRMAR
      ************************************************************/
-    function validateForm(){
-      if(!signatureDataUrl) return { ok:false, msg:"Falta salvar a assinatura. Assine e clique em “Salvar”." };
-      if(!elCheck.checked) return { ok:false, msg:"Marque o check para confirmar." };
-      if(!elProf.value.trim()) return { ok:false, msg:"Preencha o nome do professor." };
-      if(!elLivro.value.trim()) return { ok:false, msg:"Preencha o livro entregue." };
-      return { ok:true };
-    }
-
-    elCheck.addEventListener("change", () => {
-      btnConfirm.disabled = !elCheck.checked;
-    });
-
     btnConfirm.addEventListener("click", async () => {
-      const v = validateForm();
-      if(!v.ok){ alert(v.msg); return; }
+      // valida de novo (segurança)
+      if(!elProf.value.trim()) return alert("Preencha o nome do professor.");
+      if(!elLivro.value.trim()) return alert("Preencha o livro entregue.");
+      if(!signatureUrl) return alert("Falta salvar a assinatura.");
+      if(!elCheck.checked) return alert("Marque o check para confirmar.");
+
+      btnConfirm.disabled = true;
 
       try{
         await addDoc(collection(db, COL), {
@@ -771,25 +864,30 @@
           disciplina: elDisc.value,
           professor: elProf.value.trim(),
           livro: elLivro.value.trim(),
-          assinatura: signatureDataUrl,
+          assinatura: signatureUrl,              // ✅ URL da assinatura
+          signaturePath: signatureStoragePath,   // ✅ path pra apagar depois se excluir
           createdAt: serverTimestamp()
         });
 
+        // reset inputs
         elProf.value = "";
         elLivro.value = "";
         elCheck.checked = false;
-        btnConfirm.disabled = true;
 
-        // reset assinatura
+        // reset assinatura (apenas do form)
         const rect = sigCanvas.getBoundingClientRect();
         ctx.clearRect(0,0,rect.width,rect.height);
         signatureDirty = false;
-        signatureDataUrl = "";
+        signatureUrl = "";
+        signatureStoragePath = "";
         sigPreview.style.display = "none";
         setSigTag(false);
+
+        syncConfirmState();
       }catch(err){
         console.error(err);
         alert("Falha ao salvar no Firestore. Verifique regras do Firebase.");
+        syncConfirmState();
       }
     });
 
@@ -799,8 +897,19 @@
     [fTurma, fDisc, fBusca].forEach(el => el.addEventListener("input", render));
 
     /************************************************************
-     * PDF (tabela + páginas de assinaturas)
+     * PDF (tabela + páginas de assinaturas via URL)
      ************************************************************/
+    async function loadImageAsDataURL(url){
+      // converte URL do Storage em base64 pro jsPDF
+      const res = await fetch(url);
+      const blob = await res.blob();
+      return await new Promise((resolve) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.readAsDataURL(blob);
+      });
+    }
+
     btnPdf.addEventListener("click", async () => {
       const filtered = getFiltered();
       if(filtered.length === 0){
@@ -850,8 +959,8 @@
         }
       });
 
-      // páginas extras: assinaturas
       const signed = filtered.filter(r => !!r.assinatura);
+
       for(const r of signed){
         docpdf.addPage("a4", "portrait");
         docpdf.setFont("helvetica", "bold");
@@ -865,10 +974,11 @@
         docpdf.text(`Data/Hora: ${formatDateTime(r.dataHoraISO)}`, 14, 36);
         docpdf.text(`Livro: ${r.livro}`, 14, 42);
 
-        // imagem da assinatura
         try{
-          docpdf.addImage(r.assinatura, "PNG", 14, 52, 180, 60);
+          const dataUrl = await loadImageAsDataURL(r.assinatura);
+          docpdf.addImage(dataUrl, "JPEG", 14, 52, 180, 60);
         }catch(e){
+          console.warn(e);
           docpdf.text("Assinatura indisponível para renderizar.", 14, 56);
         }
 
@@ -880,24 +990,39 @@
     });
 
     /************************************************************
-     * APAGAR TUDO (Firestore)
+     * APAGAR TUDO (Firestore + tenta apagar arquivos do Storage)
      ************************************************************/
     btnClear.addEventListener("click", async () => {
       if(!confirm("Tem certeza que deseja apagar TODOS os registros?")) return;
 
       try{
         const snap = await getDocs(collection(db, COL));
+
+        // tenta apagar assinaturas do Storage
+        const delFiles = snap.docs.map(d => {
+          const data = d.data();
+          if(data.signaturePath){
+            return deleteObject(ref(storage, data.signaturePath)).catch(()=>{});
+          }
+          return Promise.resolve();
+        });
+
+        await Promise.all(delFiles);
+
+        // apaga docs
         const deletes = snap.docs.map(d => deleteDoc(doc(db, COL, d.id)));
         await Promise.all(deletes);
+
         alert("Registros apagados!");
       }catch(err){
         console.error(err);
-        alert("Falha ao apagar. Verifique regras/permissões do Firestore.");
+        alert("Falha ao apagar. Verifique regras/permissões do Firebase.");
       }
     });
 
-    // render inicial
+    // inicial
     render();
+    syncConfirmState();
   </script>
 </body>
 </html>
